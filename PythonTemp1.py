@@ -225,10 +225,14 @@ def updatePortAcess(srcInt,tunname):
     #Check if already interface index is set or not, compare with the one which we are trying to set
     #Extract our interface values's index
 
+    #Flag to check the state of the interface
+    interfaceCheck = False
+
     selectQueryString="SELECT ifindex FROM if_table WHERE name='%s'" % srcInt
     indexVal=cursor.execute(selectQueryString) #Int return ifindex
     if indexVal !=False:
         indexVal=cursor.fetchone()[0]
+
 
     #Extract the interface value from vx_tnl_tab
     selectQueryString= "SELECT port_access FROM vxlan_tnl_table WHERE tnl_name='%s'" % tunname
@@ -242,6 +246,12 @@ def updatePortAcess(srcInt,tunname):
         updateQueryString="UPDATE vxlan_tnl_table SET port_access='%s' WHERE tnl_name='%s'" % (indexVal, tunname)
         #change to update, where tunnelname
         cursor.execute(updateQueryString)
+        if interfaceStateVerify(indexVal) == True:
+            interfaceCheck = True
+
+    else:
+        if interfaceStateVerify(existingIndexVal) == True:
+            interfaceCheck = True
 
     #check other fields are set or not
     checkOthFTblRet = checkOtherFieldsVxlanTbl(tunname)
@@ -257,20 +267,26 @@ def updatePortAcess(srcInt,tunname):
         cursor.execute(selectQueryString)
         rowList = cursor.fetchone()
 
-        vxtunprop.tunnel_name = rowList[0] #Although we have the tunname, still we are taking this fromm db
-        vxtunprop.vpn = rowList[1] # Fetching the VPN from the table
-        vxtunprop.vnid = int(rowList[2]) #vnid extract
-        vxtunprop.source_ip_address=rowList[3]
-        vxtunprop.destination_ip_address = rowList[4]
-        vxtunprop.port_access = int (rowList[5])
-        vxtunprop.port_network = int (rowList[6])
-        vxtunprop.local_mac_access = rowList[7]
-        vxtunprop.remote_mac_access = rowList[8]
-        vxtunprop.local_mac_network = rowList[9]
-        vxtunprop.remote_mac_network = rowList[10]
-        vxtunprop.dlf_mac = rowList[11] #Extracting from the db
+        if interfaceStateVerify(int(rowList[6])) == True and interfaceCheck == True: # The state of source interface is Up, then check the netport
 
-        return True #If all the variables are set into vxtunprop, send true back
+            vxtunprop.tunnel_name = rowList[0] #Although we have the tunname, still we are taking this fromm db
+            vxtunprop.vpn = rowList[1] # Fetching the VPN from the table
+            vxtunprop.vnid = int(rowList[2]) #vnid extract
+            vxtunprop.source_ip_address=rowList[3]
+            vxtunprop.destination_ip_address = rowList[4]
+            vxtunprop.port_access = int (rowList[5])
+            vxtunprop.port_network = int (rowList[6])
+            vxtunprop.local_mac_access = rowList[7]
+            vxtunprop.remote_mac_access = rowList[8]
+            vxtunprop.local_mac_network = rowList[9]
+            vxtunprop.remote_mac_network = rowList[10]
+            vxtunprop.dlf_mac = rowList[11] #Extracting from the db
+
+            return True #If all the variables are set into vxtunprop, send true back
+
+        else:
+            print('\n The interface state of source or networks is not up')
+            return False
 
     else:
         print('\n All properties are not set for the tunnel')
@@ -457,6 +473,17 @@ def crVxlanTab(tunName, ifindex):
     elif tnlXistFlag==0:
         pass
 
+def interfaceStateVerify(ifIndex):
+    global cursor
+    selectQueryString = "select link_state from if_table where ifindex = %d" % ifIndex
+    pivot = cursor.execute(selectQueryString)
+    if pivot == True: #Basically don't reqquire this
+        state = cursor.fetchone()[0]
+        if bool(state) == True:
+            return True
+        else:
+            return False
+
 def updateVxlanTab(*args):
     global cursor
     global vxtunprop
@@ -468,6 +495,7 @@ def updateVxlanTab(*args):
     # If the either of these two flags are false, that verifies that the info is not on bcm chip, no need to send delete
     modifyOthParamsCheck = False #If the modify flag is true then the properties in the row were set and now needs to be modified
     sourceIntCheck = True  # Source Interface Check flag
+    interfaceState = False #True means up and False means down
     #interfaceIndexExistCheck = False  #Check if the ifindex exists already in the vxlantab
 
     paramArgs = (list(args[0]))
@@ -552,6 +580,8 @@ def updateVxlanTab(*args):
             sourceIntCheck = False
         elif bool(port_access_ret) == True:
             port_access = port_access_ret
+            if interfaceStateVerify(port_access) == True:
+                interfaceState = True
             
 
     if paramCheck==True:
@@ -560,6 +590,8 @@ def updateVxlanTab(*args):
         if (checkNetworkInt == 1):
             ifVal = ifIndexNetPort(paramArgs[7])
             port_network = ifVal
+            if interfaceStateVerify(ifVal) == True and interfaceState == True:
+                interfaceState = True
 
         else:
             print('\n Not a valid interface')
@@ -587,7 +619,7 @@ def updateVxlanTab(*args):
 
         cursor.execute(insertQueryString)
 
-        if port_access == True :
+        if port_access == True and interfaceState == True:
             insertQueryString = "UPDATE vxlan_tnl_table SET port_access = '%s' WHERE tnl_name = '%s' " % (port_access, tunnel_name)
             cursor.execute(insertQueryString)
         #Setting values in the vxprop struct
@@ -687,6 +719,7 @@ def set_mtu(port_name,mtu_value):
     ifprop.mtu = int(mtu_value)
     selectstring = "SELECT mtu  FROM if_table where name='%s'"%(port_name)
     ret = cursor.execute(selectstring)
+    ret = cursor.fetchone()[0]
     if ret == ifprop.mtu:
        print 'No Modification required to MTU'
        return -1
@@ -700,6 +733,7 @@ def set_autonego(port_name,autonego_value):
     ifprop.autonego = int(autonego_value)
     selectstring = "SELECT autonego  FROM if_table where name='%s'"%(port_name)
     ret = cursor.execute(selectstring)
+    ret = cursor.fetchone()[0]
     if ret == ifprop.autonego:
        print 'No Modification required to autonego'
        return -1
@@ -750,6 +784,7 @@ def set_speed(port_name,speed_value):
     ifprop.speed = value * factor
     selectstring = "SELECT speed  FROM if_table where name='%s'" % port_name
     ret = cursor.execute(selectstring)
+    ret = cursor.fetchone()[0]
     if ret == ifprop.speed:
         print 'No Modification required to Speed'
         return -1
@@ -763,6 +798,7 @@ def set_shutdown (port_name):
     ifprop.enable = 0
     selectstring = "SELECT enable  FROM if_table where name='%s'"% port_name
     ret = cursor.execute(selectstring)
+    ret = cursor.fetchone()[0]
     if ret == ifprop.enable:
        print 'No Modification required to Shutdown'
        return -1
@@ -776,6 +812,7 @@ def set_noshutdown(port_name):
     ifprop.enable = 1
     selectstring = "SELECT enable  FROM if_table where name='%s'"%(port_name)
     ret = cursor.execute(selectstring)
+    ret = cursor.fetchone()[0]
     if ret == ifprop.enable:
        print 'No Modification required to NoShutdown'
        return -1
@@ -926,7 +963,7 @@ def main(argv):
         if command == 'show_iface':
             selectstring = "SELECT * FROM if_table"
             cursor.execute(selectstring)
-            print cursor.fetchmany()
+            print (cursor.fetchall())
 
         elif command == 'shcollsession':
             shoRet = collectorShowInfo()
