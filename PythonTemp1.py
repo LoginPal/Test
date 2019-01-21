@@ -59,9 +59,9 @@ There are select and insert queries and they can be converted to the functions
 
 ##******************show commands*********************##
 
-def collectorShowInfo(collectorid):
+def collectorShowInfo():
     global cursor
-    selectQueryString = "SELECT * FROM collector_sess_table WHERE sess_id=%d" % int(collectorid)
+    selectQueryString = "SELECT * FROM collector_sess_table"
     pivot = cursor.execute(selectQueryString)
     if bool(pivot) == True:
         print(cursor.fetchall())
@@ -70,9 +70,9 @@ def collectorShowInfo(collectorid):
         return False
 
 
-def tunnelShowInfo(tunname):
+def tunnelShowInfo():
     global cursor
-    selectQueryString = "SELECT * FROM vxlan_tnl_table WHERE tnl_name='%s'" % tunname
+    selectQueryString = "SELECT * FROM vxlan_tnl_table"
     pivot = cursor.execute(selectQueryString)
     if bool(pivot) == True:
         print(cursor.fetchall())
@@ -929,14 +929,13 @@ def main(argv):
             print cursor.fetchmany()
 
         elif command == 'shcollsession':
-            sessCollId = param1
-            shoRet = collectorShowInfo(sessCollId)
+            shoRet = collectorShowInfo()
             if shoRet == False:
                 print ("\n No information available on collector")
 
         elif command == 'shtuninfo':
             tunName = param1
-            shoRet = tunnelShowInfo(tunName)
+            shoRet = tunnelShowInfo()
             if shoRet == False:
                 print ("\n No information available on tunnel")
 
