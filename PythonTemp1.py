@@ -57,6 +57,30 @@ There are select and insert queries and they can be converted to the functions
 
 ##******************Future code*********************##
 
+##******************show commands*********************##
+
+def collectorShowInfo(collectorid):
+    global cursor
+    selectQueryString = "SELECT * FROM collector_sess_table WHERE sess_id=%d" % int(collectorid)
+    pivot = cursor.execute(selectQueryString)
+    if bool(pivot) == True:
+        print(cursor.fetchall())
+        return True
+    else:
+        return False
+
+
+def tunnelShowInfo(tunname):
+    global cursor
+    selectQueryString = "SELECT * FROM vxlan_tnl_table WHERE tnl_name='%s'" % tunname
+    pivot = cursor.execute(selectQueryString)
+    if bool(pivot) == True:
+        print(cursor.fetchall())
+        return True
+    else:
+        return False
+
+
 ##******************CollectorTunnel section*********##
 
 '''
@@ -898,10 +922,24 @@ def main(argv):
           no = arg
 
     if mode == 'enable':
-       if command == 'show_iface':
-          selectstring = "SELECT * FROM if_table"
-          cursor.execute(selectstring)
-          print cursor.fetchmany()
+
+        if command == 'show_iface':
+            selectstring = "SELECT * FROM if_table"
+            cursor.execute(selectstring)
+            print cursor.fetchmany()
+
+        elif command == 'shcollsession':
+            sessCollId = param1
+            shoRet = collectorShowInfo(sessCollId)
+            if shoRet == False:
+                print ("\n No information available on collector")
+
+        elif command == 'shtuninfo':
+            tunName = param1
+            shoRet = tunnelShowInfo(tunName)
+            if shoRet == False:
+                print ("\n No information available on tunnel")
+
 
     elif mode == 'config':
         '''
