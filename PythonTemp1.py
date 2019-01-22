@@ -63,10 +63,9 @@ def collectorShowInfo():
     global cursor
     selectQueryString = "SELECT * FROM collector_sess_table"
     pivot = cursor.execute(selectQueryString)
-    if bool(pivot) == True:
-        print(cursor.fetchall())
-        return True
-    else:
+    print(cursor.fetchall())
+    return True
+    if bool(pivot) != True:
         return False
 
 
@@ -155,7 +154,7 @@ def dstTunnelName(tunnelName, vlanid, sessId):
         '''
         querystring = "SELECT dst_tnl FROM collector_sess_table where dst_tnl = '%s'" % tunnelName
         queryret = cursor.execute (querystring)
-        if bool (queryret) == True:
+        if bool (queryret) != True:
             addTunnelToCollectorTab(tunnelName, sessId)
             return 1
         else:
@@ -475,7 +474,7 @@ def crVxlanTab(tunName, ifindex):
 
 def interfaceStateVerify(ifIndex):
     global cursor
-    selectQueryString = "select link_state from if_table where ifindex = %d" % ifIndex
+    selectQueryString = "select enable from if_table where ifindex = %d" % ifIndex
     pivot = cursor.execute(selectQueryString)
     if pivot == True: #Basically don't reqquire this
         state = cursor.fetchone()[0]
@@ -731,7 +730,7 @@ def set_autonego(port_name,autonego_value):
     global cursor
     ifprop.port = port_name
     ifprop.autonego = int(autonego_value)
-    selectstring = "SELECT autonego  FROM if_table where name='%s'"%(port_name)
+    selectstring = "SELECT autoneg  FROM if_table where name='%s'"%(port_name)
     ret = cursor.execute(selectstring)
     ret = cursor.fetchone()[0]
     if ret == ifprop.autonego:
@@ -965,11 +964,13 @@ def main(argv):
             cursor.execute(selectstring)
             print (cursor.fetchall())
 
-            
-
         elif command == 'shcollsession':
-            shoRet = collectorShowInfo()
-            if shoRet == False:
+            #shoRet = collectorShowInfo()
+            
+            selectQueryString = "SELECT * FROM collector_sess_table"
+            pivot = cursor.execute(selectQueryString)
+            print(cursor.fetchall())
+            if bool(pivot) != True:
                 print ("\n No information available on collector")
 
         elif command == 'shtuninfo':
@@ -1046,8 +1047,8 @@ def main(argv):
        elif command == 'autonego':
           ret =  set_autonego(param1,param2)
 
-          if ret == 0:
-              example = client.aev_if_prop_update(1, ifprop)
+       if ret == 0:
+           example = client.aev_if_prop_update(1, ifprop)
 
     elif mode == "config_collector_sess":
 
