@@ -45,8 +45,8 @@
       <file pinned="false" current-in-tab="true">
         <entry file="file://$PROJECT_DIR$/PythonTemp1.py">
           <provider selected="true" editor-type-id="text-editor">
-            <state relative-caret-position="103">
-              <caret line="952" lean-forward="true" selection-start-line="952" selection-end-line="952" />
+            <state relative-caret-position="193">
+              <caret line="967" column="12" selection-start-line="967" selection-start-column="12" selection-end-line="967" selection-end-column="12" />
             </state>
           </provider>
         </entry>
@@ -94,6 +94,7 @@
     </findStrings>
   </component>
   <component name="Git.Settings">
+    <option name="UPDATE_TYPE" value="MERGE" />
     <option name="RECENT_GIT_ROOT_PATH" value="$PROJECT_DIR$" />
   </component>
   <component name="IdeDocumentHistory">
@@ -196,8 +197,8 @@
       <method v="2" />
     </configuration>
     <list>
-      <item itemvalue="Python.test" />
       <item itemvalue="Python.Scratch_run" />
+      <item itemvalue="Python.test" />
     </list>
     <recent_temporary>
       <list>
@@ -288,8 +289,8 @@
     </entry>
     <entry file="file://$PROJECT_DIR$/PythonTemp1.py">
       <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="103">
-          <caret line="952" lean-forward="true" selection-start-line="952" selection-end-line="952" />
+        <state relative-caret-position="193">
+          <caret line="967" column="12" selection-start-line="967" selection-start-column="12" selection-end-line="967" selection-end-column="12" />
         </state>
       </provider>
     </entry>
