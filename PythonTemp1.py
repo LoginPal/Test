@@ -964,6 +964,7 @@ def main(argv):
             selectstring = "SELECT * FROM if_table"
             cursor.execute(selectstring)
             print (cursor.fetchall())
+            
 
         elif command == 'shcollsession':
             shoRet = collectorShowInfo()
